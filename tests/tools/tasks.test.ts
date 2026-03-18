@@ -211,6 +211,112 @@ describe("handleTaskTool", () => {
     });
   });
 
+  describe("create_task", () => {
+    it("sends POST with correct body", async () => {
+      const createdTask: RunrunitTask = {
+        id: 99,
+        title: "New Task",
+        time_worked: 0,
+        time_total: 0,
+        project_id: 100,
+        responsible_id: "mario-neto",
+      };
+      mockFetch.mockResolvedValueOnce(createdTask);
+
+      const result = await handleTaskTool("create_task", {
+        title: "New Task",
+        project_id: 100,
+        responsible_id: "mario-neto",
+      });
+
+      const [endpoint, options] = mockFetch.mock.calls[0]!;
+      expect(endpoint).toBe("/tasks");
+      expect((options as RequestInit).method).toBe("POST");
+      const body = JSON.parse((options as RequestInit).body as string);
+      expect(body.task.title).toBe("New Task");
+      expect(body.task.project_id).toBe(100);
+      expect(body.task.responsible_id).toBe("mario-neto");
+
+      const parsed = JSON.parse(
+        (result.content[0] as { type: string; text: string }).text,
+      );
+      expect(parsed.id).toBe(99);
+    });
+
+    it("throws when title is missing", async () => {
+      await expect(
+        handleTaskTool("create_task", { project_id: 1 }),
+      ).rejects.toThrow("Task title is required");
+    });
+
+    it("throws when project_id is missing", async () => {
+      await expect(
+        handleTaskTool("create_task", { title: "Test" }),
+      ).rejects.toThrow("project_id is required");
+    });
+  });
+
+  describe("update_task", () => {
+    it("sends PUT to correct endpoint with body", async () => {
+      const updatedTask: RunrunitTask = {
+        id: 42,
+        title: "Updated Title",
+        time_worked: 0,
+        time_total: 0,
+        is_closed: true,
+      };
+      mockFetch.mockResolvedValueOnce(updatedTask);
+
+      await handleTaskTool("update_task", {
+        id: 42,
+        title: "Updated Title",
+        is_closed: true,
+      });
+
+      const [endpoint, options] = mockFetch.mock.calls[0]!;
+      expect(endpoint).toBe("/tasks/42");
+      expect((options as RequestInit).method).toBe("PUT");
+      const body = JSON.parse((options as RequestInit).body as string);
+      expect(body.task.title).toBe("Updated Title");
+      expect(body.task.is_closed).toBe(true);
+    });
+
+    it("does not include undefined fields in body", async () => {
+      mockFetch.mockResolvedValueOnce({
+        id: 1, title: "T", time_worked: 0, time_total: 0,
+      } as RunrunitTask);
+
+      await handleTaskTool("update_task", { id: 1, is_urgent: true });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = JSON.parse((options as RequestInit).body as string);
+      expect(body.task).toEqual({ is_urgent: true });
+    });
+
+    it("throws when id is missing", async () => {
+      await expect(handleTaskTool("update_task", {})).rejects.toThrow(
+        "Task ID is required",
+      );
+    });
+  });
+
+  describe("list_tasks with new filters", () => {
+    it("includes team_id, sort_by and page in URLSearchParams", async () => {
+      mockFetch.mockResolvedValueOnce([]);
+
+      await handleTaskTool("list_tasks", {
+        team_id: 481379,
+        sort_by: "created_at",
+        page: 2,
+      });
+
+      const [endpoint] = mockFetch.mock.calls[0]!;
+      expect(endpoint).toContain("team_id=481379");
+      expect(endpoint).toContain("sort_by=created_at");
+      expect(endpoint).toContain("page=2");
+    });
+  });
+
   describe("unknown tool", () => {
     it("throws for unknown tool name", async () => {
       await expect(handleTaskTool("nonexistent_tool", {})).rejects.toThrow(

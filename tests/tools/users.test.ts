@@ -48,6 +48,44 @@ describe("handleUserTool", () => {
     });
   });
 
+  describe("list_users", () => {
+    it("returns simplified list of users", async () => {
+      const users = [
+        { id: "mario-neto", name: "Mario Neto", email: "mario@hero.com", position: "Dev", is_manager: true, team_ids: [1], on_vacation: false },
+        { id: "joao-silva", name: "Joao Silva", email: "joao@hero.com", position: "QA",  is_manager: false, team_ids: [1], on_vacation: false },
+      ];
+      mockFetch.mockResolvedValueOnce(users);
+
+      const result = await handleUserTool("list_users", {});
+      const parsed = JSON.parse(
+        (result.content[0] as { type: string; text: string }).text,
+      ) as Array<{ id: string; name: string }>;
+      expect(parsed).toHaveLength(2);
+      expect(parsed[0]?.id).toBe("mario-neto");
+      expect(parsed[0]?.name).toBe("Mario Neto");
+    });
+
+    it("passes team_id and limit as query params", async () => {
+      mockFetch.mockResolvedValueOnce([]);
+
+      await handleUserTool("list_users", { team_id: 481379, limit: 10 });
+
+      const [endpoint] = mockFetch.mock.calls[0]!;
+      expect(endpoint).toContain("team_id=481379");
+      expect(endpoint).toContain("limit=10");
+    });
+
+    it("returns empty array when API returns null", async () => {
+      mockFetch.mockResolvedValueOnce(null);
+
+      const result = await handleUserTool("list_users", {});
+      const parsed = JSON.parse(
+        (result.content[0] as { type: string; text: string }).text,
+      );
+      expect(parsed).toEqual([]);
+    });
+  });
+
   describe("unknown tool", () => {
     it("throws for unknown tool name", async () => {
       await expect(handleUserTool("nonexistent_tool", {})).rejects.toThrow(

@@ -11,16 +11,74 @@ Servidor MCP ([Model Context Protocol](https://modelcontextprotocol.io)) para in
 | `get_task` | Busca informações de uma task por ID (título, descrição, status, responsável etc.) |
 | `get_task_details` | Retorna a resposta bruta completa da API para uma task (útil para campos técnicos) |
 | `list_tasks` | Lista tasks com filtros opcionais |
+| `create_task` | Cria uma nova task |
+| `update_task` | Atualiza uma task existente |
+| `list_projects` | Lista os projetos disponíveis |
 | `get_me` | Retorna os dados do usuário autenticado |
+| `list_users` | Lista usuários da organização |
+| `create_time_entry` | Registra horas trabalhadas em uma task |
+| `list_time_entries` | Lista horas registradas com filtros opcionais |
 
-### Filtros disponíveis em `list_tasks`
+### Filtros e parâmetros por tool
+
+**`list_tasks`**
 
 | Parâmetro | Tipo | Descrição |
 |-----------|------|-----------|
-| `responsible_id` | string | ID do responsável pela task |
+| `responsible_id` | string | Slug do responsável (ex: `"mario-neto"`) |
 | `project_id` | number | ID do projeto |
+| `team_id` | number | ID do time |
 | `is_closed` | boolean | Filtrar por tasks fechadas |
+| `sort_by` | string | Campo de ordenação (ex: `"created_at"`) |
+| `page` | number | Página para paginação |
 | `limit` | number | Quantidade de tasks (máx. 100) |
+
+**`create_task`** — obrigatórios: `title`, `project_id`
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `title` | string | Título da task |
+| `project_id` | number | ID do projeto |
+| `responsible_id` | string | Slug do responsável |
+| `team_id` | number | ID do time |
+| `estimated_delivery_date` | string | Data no formato `YYYY-MM-DD` |
+| `current_estimate_seconds` | number | Estimativa em segundos (ex: 3600 = 1h) |
+| `is_urgent` | boolean | Marcar como urgente |
+
+**`update_task`** — obrigatório: `id` — aceita qualquer combinação dos campos de `create_task` + `board_stage_id`, `is_closed`
+
+**`list_projects`**
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `limit` | number | Quantidade de projetos |
+| `page` | number | Página para paginação |
+
+**`list_users`**
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `team_id` | number | Filtrar por time |
+| `limit` | number | Quantidade de usuários |
+
+**`create_time_entry`** — obrigatórios: `task_id`, `amount`, `date`
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `task_id` | number | ID da task |
+| `amount` | number | Tempo em segundos (ex: 3600 = 1h) |
+| `date` | string | Data no formato `YYYY-MM-DD` |
+| `description` | string | Descrição do trabalho realizado |
+
+**`list_time_entries`**
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `task_id` | number | Filtrar por task |
+| `user_id` | string | Filtrar por usuário (slug) |
+| `start_date` | string | Data inicial `YYYY-MM-DD` |
+| `end_date` | string | Data final `YYYY-MM-DD` |
+| `limit` | number | Quantidade de registros |
 
 ## Pré-requisitos
 
@@ -131,16 +189,18 @@ src/
 ├── env.ts            # Validação de variáveis de ambiente (t3-env + zod)
 ├── client.ts         # runrunitFetch() + interfaces TypeScript da API
 └── tools/
-    ├── tasks.ts      # get_task, get_task_details, list_tasks
-    ├── users.ts      # get_me
-    ├── projects.ts   # (planejado: list_projects, get_project)
-    └── time.ts       # (planejado: create_time_entry, list_time_entries)
+    ├── tasks.ts      # get_task, get_task_details, list_tasks, create_task, update_task
+    ├── users.ts      # get_me, list_users
+    ├── projects.ts   # list_projects
+    └── time.ts       # create_time_entry, list_time_entries
 
 tests/
 ├── client.test.ts
 └── tools/
     ├── tasks.test.ts
-    └── users.test.ts
+    ├── projects.test.ts
+    ├── users.test.ts
+    └── time.test.ts
 ```
 
 ### Stack
