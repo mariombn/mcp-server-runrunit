@@ -1,91 +1,153 @@
-# Runrun.it MCP Server
+# mcp-server-runrunit
 
-A Model Context Protocol (MCP) server for interacting with the Runrun.it API.
-https://runrun.it/api/documentation
+Servidor MCP ([Model Context Protocol](https://modelcontextprotocol.io)) para integração com a API do [Runrun.it](https://runrun.it). Permite que o Claude interaja com tarefas, usuários e projetos do Runrun.it diretamente via ferramentas MCP.
 
-## Features
+- API docs: https://runrun.it/api/documentation
 
-- **Get Task**: Retrieve detailed information about a specific task by ID.
-- **List Tasks**: Query tasks with filters such as responsible user, project, and status.
-- **Get Me**: Fetch information about the currently authenticated user.
-- **Strict Typing**: Implemented with strict TypeScript configuration for reliability.
-- **Safe Hardware**: environment variable validation using `t3-env` and `zod`.
-- **Native Fetch**: Uses native Node.js `fetch` API.
+## Ferramentas disponíveis
 
-## Prerequisites
+| Tool | Descrição |
+|------|-----------|
+| `get_task` | Busca informações de uma task por ID (título, descrição, status, responsável etc.) |
+| `get_task_details` | Retorna a resposta bruta completa da API para uma task (útil para campos técnicos) |
+| `list_tasks` | Lista tasks com filtros opcionais |
+| `get_me` | Retorna os dados do usuário autenticado |
 
-- Node.js (v18 or higher recommended)
-- Runrun.it API Credentials (App Key and User Token)
+### Filtros disponíveis em `list_tasks`
 
-## Installation
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `responsible_id` | string | ID do responsável pela task |
+| `project_id` | number | ID do projeto |
+| `is_closed` | boolean | Filtrar por tasks fechadas |
+| `limit` | number | Quantidade de tasks (máx. 100) |
 
-1. Clone or copy this project to your desired directory.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Configure your environment variables. Create a `.env` file in the root directory:
-   ```env
-   RUNRUNIT_APP_KEY=your_app_key
-   RUNRUNIT_USER_TOKEN=your_user_token
-   ```
+## Pré-requisitos
 
-## Usage
+- Node.js 18+
+- Credenciais da API do Runrun.it: **App Key** e **User Token**
+  - Acesse **Configurações → Integrações → API** no Runrun.it para obter suas credenciais
 
-### Direct execution (using tsx)
-
-You can run the server directly using `tsx` (useful for development):
+## Instalação
 
 ```bash
-npx tsx src/index.ts
+git clone <repo>
+cd mcp-server-runrunit
+npm install
 ```
 
-### Build and Run
+Crie o arquivo `.env` na raiz:
 
-1. Build the project:
-   ```bash
-   npm run build
-   ```
-2. Start the server:
-   ```bash
-   node build/index.js
-   ```
+```env
+RUNRUNIT_APP_KEY=sua_app_key
+RUNRUNIT_USER_TOKEN=seu_user_token
+```
 
-## Available Tools
+## Uso junto ao Claude Code
 
-- `get_task({ id: number })`: Returns details for a specific Runrun.it task.
-- `list_tasks({ responsible_id?: string, project_id?: number, is_closed?: boolean, limit?: number })`: Lists tasks based on filters.
-- `get_me()`: Returns current user information.
+### 1. Adicione o servidor ao `settings.json`
 
-## Development
-
-The project uses a strict `tsconfig.json` and `t3-env` for environment variable validation.
-
-- Run type checks: `npx tsc --noEmit`
-- Source code is in `src/index.ts` and environment validation in `src/env.ts`.
-
-## Configuration for AI Clients (e.g., Claude Desktop)
-
-To add this MCP server to an AI client like Claude Desktop, add the following to your configuration file (usually `~/.config/Claude/claude_desktop_config.json`):
+Abra as configurações do Claude Code (`/settings` ou edite `~/.claude/settings.json`) e adicione:
 
 ```json
 {
   "mcpServers": {
     "runrunit": {
       "command": "npx",
-      "args": [
-        "-y",
-        "tsx",
-        "/home/ygor@infotera.LOCAL/html/runrunit/src/index.ts"
-      ],
+      "args": ["tsx", "/caminho/absoluto/para/mcp-server-runrunit/src/index.ts"],
       "env": {
-        "RUNRUNIT_APP_KEY": "your_app_key",
-        "RUNRUNIT_USER_TOKEN": "your_user_token"
+        "RUNRUNIT_APP_KEY": "sua_app_key",
+        "RUNRUNIT_USER_TOKEN": "seu_user_token"
       }
     }
   }
 }
 ```
 
-> [!TIP]
-> Make sure to use absolute paths for the command and script. If you have already built the project, you can use `node` with the `build/index.js` path instead of `tsx`.
+> Substitua `/caminho/absoluto/para/mcp-server-runrunit` pelo caminho real no seu sistema.
+
+### 2. Reinicie o Claude Code
+
+Após salvar as configurações, reinicie o Claude Code para que o servidor MCP seja carregado.
+
+### 3. Verifique se o servidor está ativo
+
+No Claude Code, execute `/mcp` para ver os servidores conectados. O servidor `runrunit` deve aparecer na lista com as ferramentas disponíveis.
+
+### 4. Use as ferramentas em conversas
+
+O Claude pode usar as ferramentas automaticamente conforme necessário. Você também pode solicitá-las diretamente:
+
+```
+Liste as tasks abertas do projeto X
+```
+```
+Mostre os detalhes da task 1234
+```
+```
+Quais tasks estão atribuídas a mim?
+```
+
+### Alternativa: usar o build compilado
+
+Para melhor performance em produção, compile antes:
+
+```bash
+npm run build
+```
+
+E configure o `settings.json` usando `node` em vez de `tsx`:
+
+```json
+{
+  "mcpServers": {
+    "runrunit": {
+      "command": "node",
+      "args": ["/caminho/absoluto/para/mcp-server-runrunit/build/index.js"],
+      "env": {
+        "RUNRUNIT_APP_KEY": "sua_app_key",
+        "RUNRUNIT_USER_TOKEN": "seu_user_token"
+      }
+    }
+  }
+}
+```
+
+## Desenvolvimento
+
+```bash
+npm run dev          # roda direto com tsx (sem build)
+npm run build        # compila para ./build
+npm test             # roda os testes
+npm run test:watch   # testes em modo watch
+npm run test:coverage  # cobertura de código
+```
+
+### Estrutura do projeto
+
+```
+src/
+├── index.ts          # Entry point: instancia o server, agrega tools, conecta transport
+├── env.ts            # Validação de variáveis de ambiente (t3-env + zod)
+├── client.ts         # runrunitFetch() + interfaces TypeScript da API
+└── tools/
+    ├── tasks.ts      # get_task, get_task_details, list_tasks
+    ├── users.ts      # get_me
+    ├── projects.ts   # (planejado: list_projects, get_project)
+    └── time.ts       # (planejado: create_time_entry, list_time_entries)
+
+tests/
+├── client.test.ts
+└── tools/
+    ├── tasks.test.ts
+    └── users.test.ts
+```
+
+### Stack
+
+- **TypeScript** (strict mode, ESNext + NodeNext modules)
+- **@modelcontextprotocol/sdk** — SDK oficial do MCP
+- **t3-env + zod** — validação de variáveis de ambiente
+- **Fetch nativo** do Node.js — sem axios ou node-fetch
+- **Vitest** — testes unitários
+- **tsx** para dev, `tsc` para build
