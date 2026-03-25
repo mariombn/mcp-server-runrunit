@@ -111,11 +111,12 @@ Abra as configurações do Claude Code (`/settings` ou edite `~/.claude/settings
 {
   "mcpServers": {
     "runrunit": {
+      "type": "stdio",
       "command": "npx",
-      "args": ["tsx", "/caminho/absoluto/para/mcp-server-runrunit/src/index.ts"],
+      "args": ["-y", "github:mariombn/mcp-server-runrunit"],
       "env": {
-        "RUNRUNIT_APP_KEY": "sua_app_key",
-        "RUNRUNIT_USER_TOKEN": "seu_user_token"
+        "RUNRUNIT_APP_KEY": "${RUNRUNIT_APP_KEY}",
+        "RUNRUNIT_USER_TOKEN": "${RUNRUNIT_USER_TOKEN}"
       }
     }
   }
@@ -160,11 +161,12 @@ E configure o `settings.json` usando `node` em vez de `tsx`:
 {
   "mcpServers": {
     "runrunit": {
-      "command": "node",
-      "args": ["/caminho/absoluto/para/mcp-server-runrunit/build/index.js"],
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "github:mariombn/mcp-server-runrunit"],
       "env": {
-        "RUNRUNIT_APP_KEY": "sua_app_key",
-        "RUNRUNIT_USER_TOKEN": "seu_user_token"
+        "RUNRUNIT_APP_KEY": "${RUNRUNIT_APP_KEY}",
+        "RUNRUNIT_USER_TOKEN": "${RUNRUNIT_USER_TOKEN}"
       }
     }
   }

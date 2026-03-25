@@ -5,8 +5,9 @@
 MCP server (Model Context Protocol) para integração com a API do Runrun.it (Runrunit).
 Permite que Claude interaja com tarefas, projetos, usuários e registro de horas diretamente via ferramentas MCP.
 
-Forked de: https://github.com/ygor-infotera/runrunit-mcp
+github do projeto: https://github.com/mariombn/mcp-server-runrunit
 API docs: https://runrun.it/api/documentation
+API doc Markdown: `./doc/api.md` (Usar essa de preferencia)
 
 ## Stack
 
@@ -100,11 +101,12 @@ tests/
 {
   "mcpServers": {
     "runrunit": {
+      "type": "stdio",
       "command": "npx",
-      "args": ["tsx", "/Users/mario/sandbox/hero/mcp-server-runrunit/src/index.ts"],
+      "args": ["-y", "github:mariombn/mcp-server-runrunit"],
       "env": {
-        "RUNRUNIT_APP_KEY": "sua_app_key",
-        "RUNRUNIT_USER_TOKEN": "seu_user_token"
+        "RUNRUNIT_APP_KEY": "${RUNRUNIT_APP_KEY}",
+        "RUNRUNIT_USER_TOKEN": "${RUNRUNIT_USER_TOKEN}"
       }
     }
   }
