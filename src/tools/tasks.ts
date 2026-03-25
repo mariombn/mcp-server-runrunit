@@ -109,10 +109,6 @@ export const taskToolDefinitions = [
           type: "boolean",
           description: "Mark the task as urgent",
         },
-        description: {
-          type: "string",
-          description: "Task description (HTML is supported)",
-        },
       },
       required: ["title", "project_id"],
     },
@@ -158,10 +154,6 @@ export const taskToolDefinitions = [
         is_urgent: {
           type: "boolean",
           description: "Mark or unmark as urgent",
-        },
-        description: {
-          type: "string",
-          description: "Task description (HTML is supported)",
         },
       },
       required: ["id"],
@@ -266,7 +258,7 @@ export async function handleTaskTool(name: string, args: ToolArgs) {
       const body: Record<string, unknown> = { title, project_id };
       const optionalFields = [
         "responsible_id", "team_id", "estimated_delivery_date",
-        "current_estimate_seconds", "is_urgent", "description",
+        "current_estimate_seconds", "is_urgent",
       ] as const;
       for (const field of optionalFields) {
         if (args?.[field] !== undefined) body[field] = args[field];
@@ -292,7 +284,7 @@ export async function handleTaskTool(name: string, args: ToolArgs) {
       const updatableFields = [
         "title", "responsible_id", "team_id", "board_stage_id",
         "estimated_delivery_date", "current_estimate_seconds",
-        "is_closed", "is_urgent", "description",
+        "is_closed", "is_urgent",
       ] as const;
       for (const field of updatableFields) {
         if (args?.[field] !== undefined) body[field] = args[field];

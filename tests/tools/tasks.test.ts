@@ -41,7 +41,7 @@ describe("simplifyTask", () => {
     estimated_delivery_date: "2024-01-15",
     time_worked: 7200,
     time_total: 14400,
-    priority: "high",
+    priority: 1,
     is_closed: false,
   };
 
@@ -59,7 +59,7 @@ describe("simplifyTask", () => {
     expect(result.estimated_delivery).toBe("2024-01-15");
     expect(result.time_worked).toBe("2.00h");
     expect(result.time_total).toBe("4.00h");
-    expect(result.priority).toBe("high");
+    expect(result.priority).toBe(1);
     expect(result.is_closed).toBe(false);
     expect(result.link).toBe("https://runrun.it/pt-BR/tasks/42");
   });
@@ -243,21 +243,7 @@ describe("handleTaskTool", () => {
       expect(parsed.id).toBe(99);
     });
 
-    it("sends description in body when provided", async () => {
-      mockFetch.mockResolvedValueOnce({
-        id: 99, title: "New Task", time_worked: 0, time_total: 0,
-      } as RunrunitTask);
 
-      await handleTaskTool("create_task", {
-        title: "New Task",
-        project_id: 100,
-        description: "<p>Lorem ipsum</p>",
-      });
-
-      const [, options] = mockFetch.mock.calls[0]!;
-      const body = JSON.parse((options as RequestInit).body as string);
-      expect(body.task.description).toBe("<p>Lorem ipsum</p>");
-    });
 
     it("throws when title is missing", async () => {
       await expect(
@@ -309,20 +295,7 @@ describe("handleTaskTool", () => {
       expect(body.task).toEqual({ is_urgent: true });
     });
 
-    it("sends description in body when provided", async () => {
-      mockFetch.mockResolvedValueOnce({
-        id: 42, title: "T", time_worked: 0, time_total: 0,
-      } as RunrunitTask);
 
-      await handleTaskTool("update_task", {
-        id: 42,
-        description: "<p>Updated description</p>",
-      });
-
-      const [, options] = mockFetch.mock.calls[0]!;
-      const body = JSON.parse((options as RequestInit).body as string);
-      expect(body.task.description).toBe("<p>Updated description</p>");
-    });
 
     it("throws when id is missing", async () => {
       await expect(handleTaskTool("update_task", {})).rejects.toThrow(
