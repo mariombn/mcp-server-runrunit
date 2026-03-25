@@ -32,7 +32,14 @@ export interface RunrunitTask {
 }
 
 export interface RunrunitTaskDescription {
+  body?: string;
   description?: string;
+  user?: Record<string, unknown>;
+  editor?: string;
+  editing_since?: string;
+  updated_at?: string;
+  edited_at?: string;
+  locked_at?: string;
 }
 
 export interface RunrunitUser {

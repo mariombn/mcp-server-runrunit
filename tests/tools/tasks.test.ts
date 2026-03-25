@@ -304,6 +304,64 @@ describe("handleTaskTool", () => {
     });
   });
 
+  describe("get_task_description", () => {
+    it("returns task description data", async () => {
+      const mockDesc = { body: "This is a description", user: { name: "Mario" } };
+      mockFetch.mockResolvedValueOnce(mockDesc);
+
+      const result = await handleTaskTool("get_task_description", { task_id: 123 });
+
+      const [endpoint] = mockFetch.mock.calls[0]!;
+      expect(endpoint).toBe("/tasks/123/description");
+
+      const parsed = JSON.parse(
+        (result.content[0] as { type: string; text: string }).text,
+      );
+      expect(parsed.body).toBe("This is a description");
+    });
+
+    it("throws when task_id is missing", async () => {
+      await expect(handleTaskTool("get_task_description", {})).rejects.toThrow(
+        "Task ID is required",
+      );
+    });
+  });
+
+  describe("update_task_description", () => {
+    it("sends PUT to correct endpoint with body", async () => {
+      const updatedDesc = { body: "Updated desc body", user: { name: "Mario" } };
+      mockFetch.mockResolvedValueOnce(updatedDesc);
+
+      const result = await handleTaskTool("update_task_description", {
+        task_id: 123,
+        body: "Updated desc body",
+      });
+
+      const [endpoint, options] = mockFetch.mock.calls[0]!;
+      expect(endpoint).toBe("/tasks/123/description");
+      expect((options as RequestInit).method).toBe("PUT");
+      const requestBody = JSON.parse((options as RequestInit).body as string);
+      expect(requestBody.description.body).toBe("Updated desc body");
+
+      const parsed = JSON.parse(
+        (result.content[0] as { type: string; text: string }).text,
+      );
+      expect(parsed.body).toBe("Updated desc body");
+    });
+
+    it("throws when task_id is missing", async () => {
+      await expect(
+        handleTaskTool("update_task_description", { body: "desc" }),
+      ).rejects.toThrow("Task ID is required");
+    });
+
+    it("throws when body is missing", async () => {
+      await expect(
+        handleTaskTool("update_task_description", { task_id: 1 }),
+      ).rejects.toThrow("Description body is required");
+    });
+  });
+
   describe("list_tasks with new filters", () => {
     it("includes team_id, sort_by and page in URLSearchParams", async () => {
       mockFetch.mockResolvedValueOnce([]);

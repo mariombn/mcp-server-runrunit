@@ -10,9 +10,11 @@ Servidor MCP ([Model Context Protocol](https://modelcontextprotocol.io)) para in
 |------|-----------|
 | `get_task` | Busca informações de uma task por ID (título, descrição, status, responsável etc.) |
 | `get_task_details` | Retorna a resposta bruta completa da API para uma task (útil para campos técnicos) |
+| `get_task_description` | Retorna os detalhes da descrição de uma task (texto, usuário atual editando, datas) |
 | `list_tasks` | Lista tasks com filtros opcionais |
 | `create_task` | Cria uma nova task |
 | `update_task` | Atualiza uma task existente |
+| `update_task_description` | Atualiza o texto/corpo da descrição de uma task |
 | `list_projects` | Lista os projetos disponíveis |
 | `get_me` | Retorna os dados do usuário autenticado |
 | `list_users` | Lista usuários da organização |
@@ -46,6 +48,19 @@ Servidor MCP ([Model Context Protocol](https://modelcontextprotocol.io)) para in
 | `is_urgent` | boolean | Marcar como urgente |
 
 **`update_task`** — obrigatório: `id` — aceita qualquer combinação dos campos de `create_task` + `board_stage_id`, `is_closed`
+
+**`get_task_description`** — obrigatório: `task_id`
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `task_id` | number | ID da task |
+
+**`update_task_description`** — obrigatórios: `task_id`, `body`
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `task_id` | number | ID da task |
+| `body` | string | Substitui o corpo da descrição da task |
 
 **`list_projects`**
 
@@ -191,7 +206,7 @@ src/
 ├── env.ts            # Validação de variáveis de ambiente (t3-env + zod)
 ├── client.ts         # runrunitFetch() + interfaces TypeScript da API
 └── tools/
-    ├── tasks.ts      # get_task, get_task_details, list_tasks, create_task, update_task
+    ├── tasks.ts      # get_task(s), create/update_task, task_descriptions
     ├── users.ts      # get_me, list_users
     ├── projects.ts   # list_projects
     └── time.ts       # create_time_entry, list_time_entries

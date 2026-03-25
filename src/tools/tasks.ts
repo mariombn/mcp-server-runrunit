@@ -159,6 +159,38 @@ export const taskToolDefinitions = [
       required: ["id"],
     },
   },
+  {
+    name: "get_task_description",
+    description: "Get the full description details of a task, including who is editing it and when it was last updated.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        task_id: {
+          type: "number",
+          description: "The ID of the task",
+        },
+      },
+      required: ["task_id"],
+    },
+  },
+  {
+    name: "update_task_description",
+    description: "Update the description body of a task.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        task_id: {
+          type: "number",
+          description: "The ID of the task",
+        },
+        body: {
+          type: "string",
+          description: "Task description body",
+        },
+      },
+      required: ["task_id", "body"],
+    },
+  },
 ] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -205,13 +237,14 @@ export async function handleTaskTool(name: string, args: ToolArgs) {
         (runrunitFetch(`/tasks/${id}/description`) as Promise<RunrunitTaskDescription>).catch(
           (err: unknown) => {
             console.error(`Failed to fetch description for task ${id}:`, err);
-            return { description: "Could not fetch description" };
+            return { description: "Could not fetch description", body: undefined } as RunrunitTaskDescription;
           },
         ),
       ]);
 
-      if (descData.description) {
-        task.description = descData.description;
+      const updatedDesc = descData.body || descData.description;
+      if (updatedDesc) {
+        task.description = updatedDesc;
       }
 
       return {
@@ -299,6 +332,34 @@ export async function handleTaskTool(name: string, args: ToolArgs) {
         content: [
           { type: "text", text: JSON.stringify(simplifyTask(task), null, 2) },
         ],
+      };
+    }
+
+    case "get_task_description": {
+      const task_id = args?.["task_id"] as number | undefined;
+      if (!task_id) throw new Error("Task ID is required");
+
+      const descData = await runrunitFetch(`/tasks/${task_id}/description`);
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(descData, null, 2) }],
+      };
+    }
+
+    case "update_task_description": {
+      const task_id = args?.["task_id"] as number | undefined;
+      const body = args?.["body"] as string | undefined;
+
+      if (!task_id) throw new Error("Task ID is required");
+      if (body === undefined) throw new Error("Description body is required");
+
+      const descData = await runrunitFetch(`/tasks/${task_id}/description`, {
+        method: "PUT",
+        body: JSON.stringify({ description: { body } }),
+      });
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(descData, null, 2) }],
       };
     }
 
